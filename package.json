@@ -1,0 +1,20 @@
+{
+  "name": "nodebb-plugin-sso-linkedin",
+  "version": "0.0.1",
+  "description": "linkedin login for your nodebb",
+  "main": "library.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "keywords": [
+    "nodebb",
+    "linkedin",
+    "oauth",
+    "sso"
+  ],
+  "author": "Levi Mootz",
+  "license": "ISC",
+  "dependencies": {
+    "passport-linkedin-oauth2": "^1.1.1"
+  }
+}
