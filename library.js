@@ -5,7 +5,7 @@
     meta = module.parent.require('./meta'),
     db = module.parent.require('../src/database'),
     passport = module.parent.require('passport'),
-      passportLinkedin = require('passport-linkedin-oauth2').OAuth2Strategy,
+      passportLinkedin = require('passport-linkedin').Strategy,
       fs = module.parent.require('fs'),
       path = module.parent.require('path'),
       nconf = module.parent.require('nconf');
@@ -35,11 +35,12 @@
     meta.settings.get('sso-linkedin', function(err, settings) {
       if (!err && settings['id'] && settings['secret']) {
         passport.use(new passportLinkedin({
-          clientID: settings['id'],
-          clientSecret: settings['secret'],
-          callbackURL: nconf.get('url') + '/auth/linkedin/callback'
+          consumerKey: settings['id'],
+          consumerSecret: settings['secret'],
+          callbackURL: nconf.get('url') + '/auth/linkedin/callback',
+          profileFields: ['id', 'first-name', 'last-name', 'email-address']
         }, function(accessToken, refreshToken, profile, done) {
-          //console.log(JSON.stringify(profile));
+          console.log(JSON.stringify(profile));
           Linkedin.login(profile.id, profile.displayName, profile.emails[0].value, function(err, user) {
             if (err) {
               return done(err);
@@ -52,9 +53,7 @@
           name: 'linkedin',
           url: '/auth/linkedin',
           callbackURL: '/auth/linkedin/callback',
-          icon: 'fa-linkedin-square',
-          // Needs to be checked with linkedin api docs...
-          scope: 'r_basicprofile r_emailaddress'
+          icon: 'fa-linkedin-square'
         });
       }
 
