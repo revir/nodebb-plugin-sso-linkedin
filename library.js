@@ -40,7 +40,6 @@
           callbackURL: nconf.get('url') + '/auth/linkedin/callback',
           profileFields: ['id', 'first-name', 'last-name', 'email-address']
         }, function(accessToken, refreshToken, profile, done) {
-          console.log(JSON.stringify(profile));
           Linkedin.login(profile.id, profile.displayName, profile.emails[0].value, function(err, user) {
             if (err) {
               return done(err);
