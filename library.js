@@ -24,6 +24,10 @@
     var app = params.router,
         middleware = params.middleware,
         controllers = params.controllers;
+        
+    function render(req, res, next) {
+      res.render('admin/plugins/sso-linkedin', {});
+    }
 
     app.get('/admin/plugins/sso-linkedin', middleware.admin.buildHeader, render);
     app.get('/api/admin/plugins/sso-linkedin', render);
