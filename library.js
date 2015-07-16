@@ -20,10 +20,10 @@
 
   var Linkedin = {};
 
-  Linkedin.init = function(app, middleware, controllers, callback) {
-    function render(req, res, next) {
-      res.render('admin/plugins/sso-linkedin', {});
-    }
+  Linkedin.init = function(params, callback) {
+    var app = params.router,
+        middleware = params.middleware,
+        controllers = params.controllers;
 
     app.get('/admin/plugins/sso-linkedin', middleware.admin.buildHeader, render);
     app.get('/api/admin/plugins/sso-linkedin', render);
