@@ -45,7 +45,7 @@
           callbackURL: nconf.get('url') + '/auth/linkedin/callback',
           profileFields: ['id', 'first-name', 'last-name', 'email-address', 'picture-url']
         }, function(accessToken, refreshToken, profile, done) {
-          Linkedin.login(profile.id, profile.displayName, profile.emails[0].value, profile.pictureUrl, function(err, user) {
+          Linkedin.login(profile.id, profile.displayName, profile.name, profile.emails[0].value, profile.pictureUrl, function(err, user) {
             if (err) {
               return done(err);
             }
@@ -65,7 +65,7 @@
     });
   };
 
-  Linkedin.login = function(liid, handle, email, pictureUrl, callback) {
+  Linkedin.login = function(liid, handle, name, email, pictureUrl, callback) {
     Linkedin.getUidByLinkedinId(liid, function(err, uid) {
       if(err) {
         return callback(err);
@@ -94,6 +94,12 @@
                 User.setUserField(uid, 'uploadedpicture', pictureUrl);
                 User.setUserField(uid, 'picture', pictureUrl);
               }
+
+              // save name.
+              if (name && name.familyName && name.givenName) {
+                User.setUserField(uid, 'firstName', name.givenName);
+                User.setUserField(uid, 'lastName', name.familyName);
+              }
               next();
             }
           ], function (err) {
@@ -109,7 +115,9 @@
           }
 
           if (!uid) {
-            User.create({username: handle, email: email}, function(err, uid) {
+            User.create({username: handle, 
+              fullname: handle,
+              email: email}, function(err, uid) {
               if(err) {
                 return callback(err);
               }
