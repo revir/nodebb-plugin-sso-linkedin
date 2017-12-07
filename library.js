@@ -45,7 +45,8 @@
           callbackURL: nconf.get('url') + '/auth/linkedin/callback',
           profileFields: ['id', 'first-name', 'last-name', 'email-address', 'picture-url']
         }, function(accessToken, refreshToken, profile, done) {
-          Linkedin.login(profile.id, profile.displayName, profile.name, profile.emails[0].value, profile.pictureUrl, function(err, user) {
+          var pictureUrl = profile.pictureUrl || (profile._json && profile._json.pictureUrl);
+          Linkedin.login(profile.id, profile.displayName, profile.name, profile.emails[0].value, pictureUrl, function(err, user) {
             if (err) {
               return done(err);
             }
