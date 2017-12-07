@@ -8,6 +8,7 @@
       passportLinkedin = require('passport-linkedin').Strategy,
       fs = module.parent.require('fs'),
       path = module.parent.require('path'),
+      async = module.parent.require('async'),
       nconf = module.parent.require('nconf');
 
   var constants = Object.freeze({
@@ -42,9 +43,9 @@
           consumerKey: settings['id'],
           consumerSecret: settings['secret'],
           callbackURL: nconf.get('url') + '/auth/linkedin/callback',
-          profileFields: ['id', 'first-name', 'last-name', 'email-address']
+          profileFields: ['id', 'first-name', 'last-name', 'email-address', 'picture-url']
         }, function(accessToken, refreshToken, profile, done) {
-          Linkedin.login(profile.id, profile.displayName, profile.emails[0].value, function(err, user) {
+          Linkedin.login(profile.id, profile.displayName, profile.emails[0].value, profile.pictureUrl, function(err, user) {
             if (err) {
               return done(err);
             }
@@ -64,7 +65,7 @@
     });
   };
 
-  Linkedin.login = function(liid, handle, email, callback) {
+  Linkedin.login = function(liid, handle, email, pictureUrl, callback) {
     Linkedin.getUidByLinkedinId(liid, function(err, uid) {
       if(err) {
         return callback(err);
@@ -81,8 +82,24 @@
           // Save google-specific information to the user
           User.setUserField(uid, 'liid', liid);
           db.setObjectField('liid:uid', liid, uid);
-          callback(null, {
-            uid: uid
+
+          // trust the email.
+          async.series([
+            async.apply(User.setUserField, uid, 'email:confirmed', 1),
+            async.apply(db.delete, 'uid:' + uid + ':confirm:email:sent'),
+            async.apply(db.sortedSetRemove, 'users:notvalidated', uid),
+            function (next) {
+              // Save their photo, if present
+              if (pictureUrl) {
+                User.setUserField(uid, 'uploadedpicture', pictureUrl);
+                User.setUserField(uid, 'picture', pictureUrl);
+              }
+              next();
+            }
+          ], function (err) {
+            callback(err, {
+              uid: uid
+            });             
           });
         };
 
