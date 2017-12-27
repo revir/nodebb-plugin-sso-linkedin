@@ -25,7 +25,7 @@
     var app = params.router,
         middleware = params.middleware,
         controllers = params.controllers;
-        
+
     function render(req, res, next) {
       res.render('admin/plugins/sso-linkedin', {});
     }
@@ -106,7 +106,7 @@
           ], function (err) {
             callback(err, {
               uid: uid
-            });             
+            });
           });
         };
 
@@ -116,8 +116,9 @@
           }
 
           if (!uid) {
-            User.create({username: handle, 
+            User.create({username: handle,
               fullname: handle,
+              registerFrom: 'linkedin',
               email: email}, function(err, uid) {
               if(err) {
                 return callback(err);
