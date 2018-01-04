@@ -84,25 +84,38 @@
           User.setUserField(uid, 'liid', liid);
           db.setObjectField('liid:uid', liid, uid);
 
+          function mergeUserData(next) {
+            async.waterfall([
+							async.apply(User.getUserFields, uid, ['picture', 'firstName', 'lastName', 'fullname']),
+							function(info, next) {
+								if (!info.picture && pictureUrl) {
+									User.setUserField(uid, 'uploadedpicture', pictureUrl);
+	                User.setUserField(uid, 'picture', pictureUrl);
+								}
+								if (!info.firstName && name && name.givenName) {
+									User.setUserField(uid, 'firstName', name.givenName);
+								}
+								if (!info.lastName && name && name.familyName) {
+									User.setUserField(uid, 'lastName', name.familyName);
+								}
+								if (!info.fullname && name && name.givenName && name.familyName) {
+									var namestr = name.familyName + name.givenName;
+									if(!/.*[\u4e00-\u9fa5]+.*$/.test(namestr)) {
+										namestr = name.givenName + ' ' + name.familyName;
+									}
+									User.setUserField(uid, 'fullname', namestr);
+								}
+								next();
+							}
+            ], next);
+          }
+
           // trust the email.
           async.series([
             async.apply(User.setUserField, uid, 'email:confirmed', 1),
             async.apply(db.delete, 'uid:' + uid + ':confirm:email:sent'),
             async.apply(db.sortedSetRemove, 'users:notvalidated', uid),
-            function (next) {
-              // Save their photo, if present
-              if (pictureUrl) {
-                User.setUserField(uid, 'uploadedpicture', pictureUrl);
-                User.setUserField(uid, 'picture', pictureUrl);
-              }
-
-              // save name.
-              if (name && name.familyName && name.givenName) {
-                User.setUserField(uid, 'firstName', name.givenName);
-                User.setUserField(uid, 'lastName', name.familyName);
-              }
-              next();
-            }
+            mergeUserData
           ], function (err) {
             callback(err, {
               uid: uid
@@ -117,7 +130,6 @@
 
           if (!uid) {
             User.create({username: handle,
-              fullname: handle,
               registerFrom: 'linkedin',
               email: email}, function(err, uid) {
               if(err) {
